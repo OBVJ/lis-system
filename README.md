@@ -1,59 +1,117 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LIS Laboratory Information System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel-based laboratory information system for managing patients, sample collection, result entry, and report generation.
 
-## About Laravel
+## Features
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- Patient registration and lab request management
+- Sample collection workflow with automatic status updates
+- Result entry for numeric and qualitative values
+- Arabic PDF report generation with RTL support
+- Role-based access control for Admin, Doctor, Receptionist, and Technician
+- Inventory and material usage tracking
+- Built-in demo users for quick testing
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Requirements
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- PHP 8.1+ with required extensions
+- MySQL / MariaDB
+- Composer
+- Node.js and npm (for frontend assets)
+- Apache / Nginx or built-in PHP server
 
-## Learning Laravel
+## Installation
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+1. Clone the repository:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+```bash
+git clone https://github.com/OBVJ/lis-system.git
+cd lis-system
+```
 
-## Laravel Sponsors
+2. Install PHP dependencies:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+```bash
+composer install
+```
 
-### Premium Partners
+3. Install frontend dependencies:
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+npm install
+npm run build
+```
 
-## Contributing
+4. Copy the environment file and configure:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-## Code of Conduct
+5. Configure database connection in `.env`:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=lis_system_db
+DB_USERNAME=root
+DB_PASSWORD=
+```
 
-## Security Vulnerabilities
+6. Run migrations and seeders:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan migrate --seed
+```
+
+## Running the Application
+
+Run the local development server:
+
+```bash
+php artisan serve --host=127.0.0.1 --port=8000
+```
+
+Open the application in your browser at:
+
+```text
+http://127.0.0.1:8000
+```
+
+## Default Users
+
+The seeded users include:
+
+- Admin: `admin@lis.com` / `123456`
+- Doctor: `doctor@lis.com` / `123456`
+- Receptionist: `receptionist@lis.com` / `123456`
+- Technician: `technician@lis.com` / `123456`
+
+## Important Routes
+
+- Dashboard: `/dashboard`
+- Queue board: `/queue`
+- Patient management: `/patients`
+- Requests: `/requests`
+- Lab workbench: `/results`
+- Samples: `/samples`
+- Reports: `/reports/operational`, `/reports/financial`, `/reports/medical`
+
+## Notes
+
+- Sample collection now updates request status automatically.
+- Result entry accepts both numeric values and text values like `Positive` / `Negative`.
+- PDF reports support Arabic rendering and RTL layout.
+- Remove temporary or test routes before deploying to production.
+
+## Troubleshooting
+
+- If PDF Arabic text appears broken, ensure the report template uses RTL classes and the font is available.
+- If login fails, verify the database seeder ran and user roles were created.
+- For permission issues, check `config/permission.php` and role assignments.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is licensed under the MIT License.
