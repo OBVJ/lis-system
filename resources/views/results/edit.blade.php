@@ -49,16 +49,26 @@
                     </thead>
                     <tbody>
                         @foreach($request->items as $index => $item)
-                        <tr>
+                        @php
+                            $existingFlag = strtolower($item->result->flag ?? 'pending');
+                            $flagClass = 'secondary';
+                            if ($existingFlag === 'high') {
+                                $flagClass = 'danger';
+                            } elseif ($existingFlag === 'low') {
+                                $flagClass = 'warning';
+                            } elseif ($existingFlag === 'normal') {
+                                $flagClass = 'success';
+                            }
+                            $rowClass = in_array($existingFlag, ['high', 'low']) ? 'table-' . ($existingFlag === 'high' ? 'danger' : 'warning') : '';
+                        @endphp
+                        <tr class="{{ $rowClass }}" data-min="{{ $item->test->normal_min }}" data-max="{{ $item->test->normal_max }}">
                             <td class="ps-4">
                                 <input type="hidden" name="results[{{ $index }}][item_id]" value="{{ $item->id }}">
                                 <span class="fw-bold text-dark">{{ $item->test->name }}</span>
                                 <div class="small text-muted">{{ $item->test->category->name }}</div>
                             </td>
                             <td>
-                                <span class="badge bg-light text-primary border px-2 py-1" 
-                                      data-min="{{ $item->test->normal_min }}" 
-                                      data-max="{{ $item->test->normal_max }}">
+                                <span class="badge bg-light text-primary border px-2 py-1">
                                     {{ $item->test->normal_min }} - {{ $item->test->normal_max }}
                                 </span>
                             </td>
@@ -72,8 +82,8 @@
                                        {{ $item->status == 'completed' ? 'readonly bg-light' : '' }}>
                             </td>
                             <td>
-                                <span class="flag-badge badge rounded-pill px-3 shadow-sm">
-                                    {{ $item->result->flag ?? 'Pending' }}
+                                <span class="flag-badge badge rounded-pill px-3 shadow-sm bg-{{ $flagClass }} text-{{ in_array($flagClass, ['danger', 'warning']) ? 'white' : 'dark' }}">
+                                    {{ ucfirst($item->result->flag ?? 'Pending') }}
                                 </span>
                             </td>
                             <td>
@@ -110,23 +120,32 @@
         $('.result-input').on('keyup change blur', function() {
             let value = parseFloat($(this).val());
             let row = $(this).closest('tr');
-            let range = row.find('[data-min]');
-            let min = parseFloat(range.data('min'));
-            let max = parseFloat(range.data('max'));
+            let min = parseFloat(row.data('min'));
+            let max = parseFloat(row.data('max'));
             let badge = row.find('.flag-badge');
 
+            row.removeClass('table-danger table-warning table-success');
+            badge.removeClass('bg-success bg-danger bg-warning bg-secondary text-white text-dark');
+
             if (isNaN(value)) {
-                badge.text('Pending').removeClass('bg-success bg-danger bg-warning text-white');
+                badge.text('Pending').addClass('bg-secondary text-white');
                 return;
             }
 
-            badge.removeClass('bg-success bg-danger bg-warning text-white');
-            if (value < min) {
-                badge.text('Low').addClass('bg-warning text-dark');
-            } else if (value > max) {
-                badge.text('High').addClass('bg-danger text-white');
+            if (!isNaN(min) && !isNaN(max)) {
+                if (value < min) {
+                    badge.text('Low').addClass('bg-warning text-dark');
+                    row.addClass('table-warning');
+                } else if (value > max) {
+                    badge.text('High').addClass('bg-danger text-white');
+                    row.addClass('table-danger');
+                } else {
+                    badge.text('Normal').addClass('bg-success text-white');
+                    row.addClass('table-success');
+                }
             } else {
                 badge.text('Normal').addClass('bg-success text-white');
+                row.addClass('table-success');
             }
         });
 

@@ -28,7 +28,7 @@ class TestController extends Controller
 
     public function ajaxSearch(Request $request)
     {
-        $search = $request->get('q', '');
+        $search = $request->input('q', '');
         $tests = LabTest::with('category')
             ->where('name', 'like', "%$search%")
             ->limit(30)

@@ -18,3 +18,24 @@ if (!function_exists('app_currency')) {
         return number_format((float)$amount, 2) . ' ' . $currencySymbol;
     }
 }
+
+if (!function_exists('ar_reshape')) {
+    /**
+     * Reshape Arabic text for PDF rendering.
+     *
+     * @param string $text
+     * @return string
+     */
+    function ar_reshape($text)
+    {
+        if (app()->getLocale() !== 'ar' || empty($text)) {
+            return $text;
+        }
+
+        try {
+            return \App\Helpers\ArabicReshaper::reshape($text);
+        } catch (\Throwable $e) {
+            return $text;
+        }
+    }
+}

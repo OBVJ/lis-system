@@ -144,20 +144,9 @@ class CompleteWorkflowTest extends TestCase
             ]);
         }
 
-        // Check if request status is updated to review
+        // Check if request status is updated to ready
         $request->refresh();
-        $this->assertEquals('review', $request->status);
-
-        // Step 4.5: Approve results (move from review to completed)
-        $response = $this->actingAs($this->user)->withoutMiddleware()
-                        ->patch(route('requests.update-status', $request->id), [
-                            'status' => 'completed'
-                        ]);
-
-        $response->assertRedirect();
-
-        $request->refresh();
-        $this->assertEquals('completed', $request->status);
+        $this->assertEquals('ready', $request->status);
 
         // Step 5: Print report (should be available now)
         $response = $this->actingAs($this->user)->withoutMiddleware()
@@ -165,20 +154,20 @@ class CompleteWorkflowTest extends TestCase
 
         $response->assertStatus(200);
 
-        // Step 6: Mark as printed/delivered
+        // Step 6: Mark as delivered
         $response = $this->actingAs($this->user)->withoutMiddleware()
                         ->patch(route('requests.update-status', $request->id), [
-                            'status' => 'printed_delivered'
+                            'status' => 'delivered'
                         ]);
 
         $response->assertRedirect();
 
         $request->refresh();
-        $this->assertEquals('printed_delivered', $request->status);
+        $this->assertEquals('delivered', $request->status);
 
         // Final verification: Complete workflow successful
         $this->assertEquals('Ahmed Omar', $patient->name);
-        $this->assertEquals('printed_delivered', $request->status);
+        $this->assertEquals('delivered', $request->status);
         $this->assertCount(2, $request->items); // Two tests
         $this->assertCount(2, TestResult::whereIn('request_item_id', $request->items->pluck('id'))->get()); // Two results
     }

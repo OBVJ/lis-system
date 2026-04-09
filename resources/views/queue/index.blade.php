@@ -89,16 +89,16 @@
         </div>
     </div>
 
-    <!-- Column: Printed/Delivered -->
+    <!-- Column: Delivered -->
     <div class="col-md-2" style="min-width: 260px;">
         <div class="queue-column">
             <div class="column-header bg-dark text-white d-flex justify-content-between align-items-center p-3 rounded-top">
-                <h6 class="mb-0 fw-bold">{{ __('app.printed_delivered') }}</h6>
-                <span class="badge bg-white text-dark rounded-pill">{{ count($printedDelivered) }}</span>
+                <h6 class="mb-0 fw-bold">{{ __('app.delivered') ?? 'Delivered' }}</h6>
+                <span class="badge bg-white text-dark rounded-pill">{{ count($delivered) }}</span>
             </div>
             <div class="column-body p-2 bg-light border border-top-0 rounded-bottom" style="min-height: 70vh;">
-                @foreach($printedDelivered as $patient)
-                    @include('queue.partials.card', ['patient' => $patient, 'status' => 'printed_delivered'])
+                @foreach($delivered as $patient)
+                    @include('queue.partials.card', ['patient' => $patient, 'status' => 'delivered'])
                 @endforeach
             </div>
         </div>
@@ -117,15 +117,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold">{{ __('app.sample_type') ?? 'Sample Type' }}</label>
-                        <select name="sample_type" id="queue_sample_type" class="form-select form-select-sm" required>
-                            <option value="">{{ __('app.select_sample_type') ?? 'Select sample type...' }}</option>
-                            @foreach(\App\Models\SpecimenType::all() as $type)
-                                <option value="{{ $type->name }}">{{ $type->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
                     <div class="mb-3 text-muted small">
                         {{ __('app.sample_will_be_recorded_with_current_time_and_technician') ?? 'The sample will be recorded with current time and technician.' }}
                     </div>
@@ -138,6 +129,7 @@
     </div>
 </div>
 
+@push('scripts')
 <script>
     $(document).ready(function() {
         $('#queueCollectSampleModal').on('show.bs.modal', function (event) {
@@ -147,8 +139,17 @@
             $('#queue_request_id').val(requestId);
             $('#queueCollectSampleModal .modal-title').text('{{ __('app.collect_sample') ?? 'Collect Sample' }} - ' + patientName);
         });
+
+        // Handle successful sample collection
+        @if(session('success'))
+            // Show success message and refresh page after a short delay
+            setTimeout(function() {
+                location.reload();
+            }, 1500);
+        @endif
     });
 </script>
+@endpush
 
 <style>
     .queue-container {

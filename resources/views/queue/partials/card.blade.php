@@ -20,22 +20,17 @@
                         data-patient-name="{{ $patient->name }}">
                     <i class="fas fa-vial me-1"></i>{{ __('app.collect_sample') ?? 'Collect Sample' }}
                 </button>
-            @elseif($status === 'sample_collected')
-                <a href="{{ route('results.bulk.entry', $latestRequest->id ?? '') }}" 
+            @elseif(in_array($status, ['sample_collected', 'in_progress']))
+                <a href="{{ route('results.edit', $latestRequest->id ?? '') }}" 
                    class="btn btn-warning btn-sm rounded-pill">
-                    <i class="fas fa-flask me-1"></i>{{ __('app.bulk_results_entry') ?? 'Bulk Results Entry' }}
-                </a>
-            @elseif($status === 'in_progress')
-                <a href="{{ route('results.bulk.entry', $latestRequest->id ?? '') }}" 
-                   class="btn btn-warning btn-sm rounded-pill">
-                    <i class="fas fa-edit me-1"></i>{{ __('app.continue_results') ?? 'Continue Results' }}
+                    <i class="fas fa-edit me-1"></i>{{ __('app.enter_results') ?? 'Enter Results' }}
                 </a>
             @elseif($status === 'ready')
                 <a href="{{ route('reports.pdf', $latestRequest->id ?? '') }}" 
                    target="_blank" class="btn btn-success btn-sm rounded-pill">
                     <i class="fas fa-print me-1"></i>{{ __('app.print_report') ?? 'Print Report' }}
                 </a>
-            @elseif($status === 'printed_delivered')
+            @elseif($status === 'delivered')
                 <a href="{{ route('requests.show', $latestRequest->id ?? '') }}" 
                    class="btn btn-dark btn-sm rounded-pill">
                     <i class="fas fa-box-open me-1"></i>{{ __('app.view_details') ?? 'View Details' }}

@@ -14,11 +14,11 @@ class ResultController extends Controller
     public function index()
     {
         // Get all requests that doctors need to work on:
-        // 1. Pending sample collection
-        // 2. Samples collected but results not entered
-        // 3. Results entered but not printed
+        // 1. Waiting sample collection
+        // 2. Samples collected and pending result entry
+        // 3. Results entry completed and ready for reporting
         $requests = LabRequest::with(['patient', 'items.test', 'items.result', 'samples'])
-            ->whereIn('status', ['pending', 'sample_pending', 'collected', 'sample_collected', 'in_progress', 'completed'])
+            ->whereIn('status', ['waiting', 'sample_collected', 'in_progress', 'ready'])
             ->where(function ($query) {
                 $query->whereDoesntHave('samples') // No samples collected yet
                       ->orWhereHas('samples', function ($q) {
@@ -36,7 +36,7 @@ class ResultController extends Controller
     {
         $labRequest->load(['patient', 'items.test', 'items.result', 'samples']);
 
-        if ($labRequest->samples->where('status', 'collected')->isEmpty()) {
+        if (in_array($labRequest->status, ['waiting', 'pending'])) {
             return redirect()->route('results.index')->with('error', 'Cannot enter results before sample collection.');
         }
 
@@ -48,22 +48,25 @@ class ResultController extends Controller
         $data = $request->validate([
             'results' => 'required|array',
             'results.*.item_id' => 'required|exists:lab_request_items,id',
-            'results.*.value' => 'nullable|numeric',
+            'results.*.value' => 'nullable|string',
             'results.*.notes' => 'nullable|string',
         ]);
 
         DB::transaction(function () use ($data, $labRequest) {
             foreach ($data['results'] as $resultData) {
-                if ($resultData['value'] === null) continue;
+                if ($resultData['value'] === null || trim($resultData['value']) === '') continue;
 
                 $item = LabRequestItem::with('test')->findOrFail($resultData['item_id']);
 
-                // Auto-Flag Logic
+                // Auto-Flag Logic for numeric results
                 $flag = 'Normal';
-                if ($resultData['value'] < $item->test->normal_min) {
-                    $flag = 'Low';
-                } elseif ($resultData['value'] > $item->test->normal_max) {
-                    $flag = 'High';
+                if (is_numeric($resultData['value']) && $item->test->normal_min !== null && $item->test->normal_max !== null) {
+                    $val = (float)$resultData['value'];
+                    if ($val < $item->test->normal_min) {
+                        $flag = 'Low';
+                    } elseif ($val > $item->test->normal_max) {
+                        $flag = 'High';
+                    }
                 }
 
                 $isNewResult = TestResult::where('request_item_id', $item->id)->doesntExist();
@@ -100,7 +103,7 @@ class ResultController extends Controller
 
             // Check if all items are completed to update request status
             if ($labRequest->items()->where('status', '!=', 'completed')->count() == 0) {
-                $labRequest->update(['status' => 'review']);
+                $labRequest->update(['status' => 'ready']);
             } else {
                 $labRequest->update(['status' => 'in_progress']);
             }

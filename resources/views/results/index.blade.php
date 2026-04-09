@@ -17,7 +17,7 @@
                     <i class="fas fa-vial me-2"></i>{{ __('app.pending_sample_collection') ?? 'Pending Sample Collection' }}
                 </h6>
                 <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3">
-                    {{ $requests->where('status', 'pending')->count() }}
+                    {{ $requests->where('status', 'waiting')->count() }}
                 </span>
             </div>
             <div class="card-body p-0">
@@ -32,7 +32,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($requests->where('status', 'pending')->take(5) as $request)
+                            @forelse($requests->where('status', 'waiting')->take(5) as $request)
                             <tr>
                                 <td class="ps-4">
                                     <span class="text-primary fw-bold">#REQ-{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</span>
@@ -45,7 +45,7 @@
                                     <small class="text-muted">{{ $request->items->count() }} {{ __('app.tests') }}</small>
                                 </td>
                                 <td class="text-end pe-4">
-                                    <a href="{{ route('samples.show', $request->id) }}" class="btn btn-warning btn-sm">
+                                    <a href="{{ route('requests.show', $request->id) }}" class="btn btn-warning btn-sm">
                                         <i class="fas fa-vial me-1"></i> {{ __('app.collect_sample') }}
                                     </a>
                                 </td>
@@ -72,7 +72,7 @@
                     <i class="fas fa-microscope me-2"></i>{{ __('app.pending_results') ?? 'Pending Results Entry' }}
                 </h6>
                 <span class="badge bg-info bg-opacity-10 text-info rounded-pill px-3">
-                    {{ $requests->whereIn('status', ['collected', 'sample_collected', 'in_progress'])->count() }}
+                    {{ $requests->whereIn('status', ['sample_collected', 'in_progress'])->count() }}
                 </span>
             </div>
             <div class="card-body p-0">
@@ -87,7 +87,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($requests->whereIn('status', ['collected', 'sample_collected', 'in_progress'])->take(5) as $request)
+                            @forelse($requests->whereIn('status', ['sample_collected', 'in_progress'])->take(5) as $request)
                             <tr>
                                 <td class="ps-4">
                                     <span class="text-primary fw-bold">#REQ-{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</span>
@@ -127,7 +127,7 @@
             <i class="fas fa-check-circle me-2"></i>{{ __('app.completed_results') ?? 'Completed Results - Ready for Printing' }}
         </h6>
         <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3">
-            {{ $requests->where('status', 'completed')->count() }}
+            {{ $requests->where('status', 'ready')->count() }}
         </span>
     </div>
     <div class="card-body p-0">
@@ -143,7 +143,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($requests->where('status', 'completed') as $request)
+                    @forelse($requests->where('status', 'ready') as $request)
                     <tr>
                         <td class="ps-4">
                             <span class="text-primary fw-bold">#REQ-{{ str_pad($request->id, 5, '0', STR_PAD_LEFT) }}</span>

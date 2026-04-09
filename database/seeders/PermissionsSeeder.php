@@ -37,6 +37,38 @@ class PermissionsSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
         $adminRole->syncPermissions(Permission::all());
 
-        // You might want to assign specific things to doctor, receptionist, but for now we seeded permissions.
+        // Grant specific permissions to doctor role
+        $doctorRole = Role::firstOrCreate(['name' => 'doctor']);
+        $doctorPermissions = [
+            'view_dashboard',
+            'manage_patients',
+            'manage_requests',
+            'manage_samples',
+            'manage_results',
+            'view_reports'
+        ];
+        $doctorRole->syncPermissions($doctorPermissions);
+
+        // Grant specific permissions to receptionist role
+        $receptionistRole = Role::firstOrCreate(['name' => 'receptionist']);
+        $receptionistPermissions = [
+            'view_dashboard',
+            'manage_patients',
+            'manage_requests',
+            'manage_samples',
+            'view_reports'
+        ];
+        $receptionistRole->syncPermissions($receptionistPermissions);
+
+        // Grant specific permissions to technician role
+        $technicianRole = Role::firstOrCreate(['name' => 'technician']);
+        $technicianPermissions = [
+            'view_dashboard',
+            'manage_requests',
+            'manage_samples',
+            'manage_results',
+            'manage_inventory'
+        ];
+        $technicianRole->syncPermissions($technicianPermissions);
     }
 }

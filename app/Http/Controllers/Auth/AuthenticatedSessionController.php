@@ -20,12 +20,12 @@ class AuthenticatedSessionController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->intended('dashboard');
+            return redirect()->intended(route('dashboard'));
         }
 
-        return back()->withErrors([
+        return back()->withInput($request->only('email', 'remember'))->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ]);
     }

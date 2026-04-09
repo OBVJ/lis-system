@@ -11,12 +11,19 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        // Ensure roles exist before assigning them to seeded users.
+        Role::firstOrCreate(['name' => 'admin']);
+        Role::firstOrCreate(['name' => 'doctor']);
+        Role::firstOrCreate(['name' => 'receptionist']);
+        Role::firstOrCreate(['name' => 'technician']);
+
         // Create Admin User
         $admin = User::updateOrCreate(
             ['email' => 'admin@lis.com'],
             [
                 'name' => 'System Admin',
                 'password' => Hash::make('123456'),
+                'email_verified_at' => now(),
                 'role' => 'admin',
                 'is_active' => true,
             ]
@@ -97,6 +104,7 @@ class UserSeeder extends Seeder
                 [
                     'name' => $userData['name'],
                     'password' => Hash::make('123456'),
+                    'email_verified_at' => now(),
                     'role' => $userData['role'],
                     'is_active' => true,
                 ]

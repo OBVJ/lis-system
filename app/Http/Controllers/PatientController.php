@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Patient;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PatientController extends Controller
 {
@@ -23,7 +25,7 @@ class PatientController extends Controller
 
     public function ajaxSearch(Request $request)
     {
-        $search = trim($request->get('q'));
+        $search = trim($request->input('q'));
 
         $query = Patient::query();
         if ($search !== '') {
@@ -64,7 +66,7 @@ class PatientController extends Controller
             'paid_amount' => 'nullable|numeric|min:0',
         ]);
 
-        $patient = \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $request) {
+        $patient = DB::transaction(function () use ($validated, $request) {
             if (!empty($validated['patient_id'])) {
                 $patient = Patient::findOrFail($validated['patient_id']);
                 $patient->update(collect($validated)->except(['patient_id', 'test_ids', 'priority', 'notes', 'discount_type', 'discount_value', 'paid_amount'])->toArray());
@@ -103,11 +105,11 @@ class PatientController extends Controller
 
                 $labRequest = \App\Models\LabRequest::create([
                     'patient_id' => $patient->id,
-                    'status' => 'pending',
+                    'status' => 'waiting',
                     'total_price' => $finalTotal,
                     'priority' => $request->priority ?? 'normal',
                     'notes' => $request->notes,
-                    'created_by' => auth()->id()
+                    'created_by' => Auth::id()
                 ]);
 
                 $labRequestId = $labRequest->id;

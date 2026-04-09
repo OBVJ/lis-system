@@ -5,7 +5,7 @@
     <h1 class="page-title"><i class="fas fa-file-medical"></i> REQ-{{ str_pad($labRequest->id, 5, '0', STR_PAD_LEFT) }}</h1>
     <div class="d-flex gap-2">
         <a href="{{ route('requests.index') }}" class="btn btn-outline-secondary btn-sm px-3"><i class="fas fa-arrow-left me-1"></i>{{ __('app.back') }}</a>
-        @if($labRequest->status == 'completed')
+        @if($labRequest->status == 'ready')
         <a href="{{ route('reports.pdf', $labRequest) }}" class="btn btn-dark btn-sm px-3"><i class="fas fa-file-pdf me-1"></i>{{ __('app.download_report') }}</a>
         @endif
     </div>
@@ -18,11 +18,10 @@
             @csrf
             @method('PATCH')
             <select name="status" class="form-select form-select-sm" style="width: 150px;">
-                <option value="pending" {{ $labRequest->status == 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="collected" {{ in_array($labRequest->status, ['collected', 'sample_collected']) ? 'selected' : '' }}>Collected</option>
+                <option value="waiting" {{ in_array($labRequest->status, ['waiting', 'pending']) ? 'selected' : '' }}>Waiting</option>
+                <option value="sample_collected" {{ in_array($labRequest->status, ['sample_collected', 'collected']) ? 'selected' : '' }}>Sample Collected</option>
                 <option value="in_progress" {{ $labRequest->status == 'in_progress' ? 'selected' : '' }}>In Progress</option>
-                <option value="review" {{ $labRequest->status == 'review' ? 'selected' : '' }}>Review</option>
-                <option value="completed" {{ $labRequest->status == 'completed' ? 'selected' : '' }}>Completed</option>
+                <option value="ready" {{ in_array($labRequest->status, ['ready', 'completed']) ? 'selected' : '' }}>Ready</option>
                 <option value="delivered" {{ $labRequest->status == 'delivered' ? 'selected' : '' }}>Delivered</option>
             </select>
             <button type="submit" class="btn btn-sm btn-primary">Update Status</button>
@@ -31,36 +30,66 @@
     <div class="d-flex justify-content-between align-items-start position-relative pb-2" style="border-bottom: 2px solid #f0f0f0;">
         @php
             $stages = [
-                'pending' => ['icon' => 'fa-clipboard-list', 'label' => 'Pending', 'at' => $labRequest->created_at],
-                'collected' => ['icon' => 'fa-vial', 'label' => 'Collected', 'at' => $labRequest->collected_at],
-                'in_progress' => ['icon' => 'fa-flask', 'label' => 'In Progress', 'at' => $labRequest->in_progress_at],
-                'review' => ['icon' => 'fa-microscope', 'label' => 'Review', 'at' => $labRequest->review_at],
-                'completed' => ['icon' => 'fa-check-circle', 'label' => 'Completed', 'at' => $labRequest->completed_at],
-                'delivered' => ['icon' => 'fa-box-open', 'label' => 'Delivered', 'at' => $labRequest->delivered_at],
+                'waiting' => ['icon' => 'fa-clock', 'label' => __('app.waiting'), 'at' => $labRequest->created_at, 'color' => 'secondary'],
+                'sample_collected' => ['icon' => 'fa-vial', 'label' => __('app.sample_collected'), 'at' => $labRequest->collected_at, 'color' => 'info'],
+                'in_progress' => ['icon' => 'fa-flask', 'label' => __('app.in_progress'), 'at' => $labRequest->in_progress_at, 'color' => 'warning'],
+                'ready' => ['icon' => 'fa-check-circle', 'label' => __('app.ready'), 'at' => $labRequest->review_at, 'color' => 'success'],
+                'delivered' => ['icon' => 'fa-box-open', 'label' => __('app.delivered'), 'at' => $labRequest->delivered_at, 'color' => 'dark'],
             ];
-            $currentFound = false;
+            
+            // Determine current stage based on status
+            $currentStage = match($labRequest->status) {
+                'waiting', 'pending' => 'waiting',
+                'sample_collected', 'collected' => 'sample_collected', 
+                'in_progress' => 'in_progress',
+                'ready', 'completed' => 'ready',
+                'delivered' => 'delivered',
+                default => 'waiting'
+            };
         @endphp
         
         @foreach($stages as $stageKey => $stageData)
             @php
-                if($labRequest->status == $stageKey || ($stageKey === 'collected' && $labRequest->status === 'sample_collected')) {
-                    $currentFound = true;
+                $isCompleted = false;
+                $isCurrent = false;
+                $isUpcoming = false;
+                
+                // Determine stage status
+                $stageOrder = array_keys($stages);
+                $currentIndex = array_search($currentStage, $stageOrder);
+                $stageIndex = array_search($stageKey, $stageOrder);
+                
+                if ($stageIndex < $currentIndex) {
+                    $isCompleted = true;
+                } elseif ($stageIndex === $currentIndex) {
+                    $isCurrent = true;
+                } else {
+                    $isUpcoming = true;
                 }
-                $active = $stageData['at'] !== null || $labRequest->status == $stageKey || ($stageKey === 'collected' && $labRequest->status === 'sample_collected');
+                
+                // Override for waiting stage - it's always completed if we have a request
+                if ($stageKey === 'waiting' && $labRequest->id) {
+                    $isCompleted = true;
+                    $isCurrent = false;
+                }
             @endphp
             <div class="text-center" style="width: 16%; z-index: 1;">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle {{ $active ? 'bg-primary text-white' : 'bg-light text-muted' }}" style="width: 40px; height: 40px; border-radius: 50%;">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle {{ $isCompleted ? 'bg-' . $stageData['color'] . ' text-white' : ($isCurrent ? 'bg-' . $stageData['color'] . ' text-white border border-2 border-primary' : 'bg-light text-muted border') }}" style="width: 40px; height: 40px; border-radius: 50%;">
                     <i class="fas {{ $stageData['icon'] }}"></i>
                 </div>
-                <div class="mt-2 small fw-bold {{ $active ? 'text-primary' : 'text-muted' }}">{{ $stageData['label'] }}</div>
+                <div class="mt-2 small fw-bold {{ $isCompleted || $isCurrent ? 'text-' . $stageData['color'] : 'text-muted' }}">{{ $stageData['label'] }}</div>
                 @if($stageData['at'])
                     <div class="text-muted" style="font-size: 10px;">{{ \Carbon\Carbon::parse($stageData['at'])->format('d/m/y H:i') }}</div>
+                @elseif($isCurrent)
+                    <div class="text-primary fw-bold" style="font-size: 10px;">{{ __('app.current') ?? 'Current' }}</div>
                 @endif
             </div>
         @endforeach
         
-        <!-- Background line -->
-        <div class="position-absolute" style="top: 20px; left: 8%; right: 8%; height: 2px; background-color: #f0f0f0; z-index: 0;"></div>
+        <!-- Progress line -->
+        <div class="position-absolute" style="top: 20px; left: 8%; right: 8%; height: 2px; background-color: #f0f0f0; z-index: 0;">
+            <div class="bg-primary" style="height: 100%; width: {{ (array_search($currentStage, array_keys($stages)) / (count($stages) - 1)) * 100 }}%;"></div>
+        </div>
     </div>
 </div>
 
@@ -86,9 +115,9 @@
         <div class="stat-card mb-3">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h6 class="fw-bold mb-0"><i class="fas fa-vial me-2 text-primary"></i>{{ __('app.sample_status') }}</h6>
-                @if(in_array($labRequest->status, ['pending', 'collected', 'sample_collected']))
+                @if(in_array($labRequest->status, ['waiting', 'pending', 'sample_collected', 'collected']))
                 <button type="button" class="btn btn-primary btn-sm px-2" data-bs-toggle="modal" data-bs-target="#collectSampleModal" style="font-size:10px;">
-                    <i class="fas fa-plus me-1"></i>Collect
+                    <i class="fas fa-plus me-1"></i>Collect Sample
                 </button>
                 @endif
             </div>

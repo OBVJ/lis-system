@@ -79,7 +79,24 @@ class ReportController extends Controller
     {
         $labRequest->load(['patient', 'items.test', 'items.result', 'items.test.category']);
 
-        $pdf = Pdf::loadView('reports.pdf', compact('labRequest'));
+        $reportUrl = route('reports.pdf', $labRequest->id);
+        $qrImage = null;
+
+        try {
+            $qrUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=240x240&chl=' . urlencode($reportUrl) . '&chld=H|0';
+            $qrData = @file_get_contents($qrUrl);
+            if ($qrData) {
+                $qrImage = 'data:image/png;base64,' . base64_encode($qrData);
+            }
+        } catch (\Throwable $e) {
+            $qrImage = null;
+        }
+
+        $pdf = Pdf::loadView('reports.pdf', compact('labRequest', 'qrImage', 'reportUrl'));
+
+        if ($labRequest->status === 'ready') {
+            $labRequest->update(['status' => 'delivered']);
+        }
 
         return $pdf->stream('Report-' . $labRequest->id . '.pdf');
     }

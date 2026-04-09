@@ -8,6 +8,7 @@ use App\Models\LabRequest;
 use App\Models\LabRequestItem;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class LabRequestController extends Controller
@@ -63,7 +64,7 @@ class LabRequestController extends Controller
 
             $labRequest = LabRequest::create([
                 'patient_id' => $request->patient_id,
-                'status' => 'pending',
+                'status' => 'waiting',
                 'total_price' => $totalPrice,
             ]);
 
@@ -95,45 +96,36 @@ class LabRequestController extends Controller
     public function updateStatus(Request $request, LabRequest $labRequest)
     {
         $request->validate([
-            'status' => 'required|in:pending,collected,sample_collected,in_progress,review,completed,delivered'
+            'status' => 'required|in:waiting,sample_collected,in_progress,ready,delivered'
         ]);
 
         $status = $request->status;
-        $labRequest->status = $status;
+        $oldStatus = $labRequest->status;
 
         // Set timestamps and responsible users based on status
         $now = now();
-        $userId = auth()->id();
+        $userId = Auth::id();
 
-        if ($status === 'collected' || $status === 'sample_collected') {
+        if ($status === 'sample_collected') {
             $labRequest->collected_at = $now;
             $labRequest->collected_by = $userId;
         } elseif ($status === 'in_progress') {
             $labRequest->in_progress_at = $now;
             $labRequest->in_progress_by = $userId;
-        } elseif ($status === 'review') {
+        } elseif ($status === 'ready') {
             $labRequest->review_at = $now;
             $labRequest->review_by = $userId;
-        } elseif ($status === 'completed') {
-            // Validate that all test results are entered before completing
-            $totalItems = $labRequest->items()->count();
-            $completedItems = $labRequest->items()->where('status', 'completed')->count();
-            
-            if ($totalItems !== $completedItems) {
-                return redirect()->back()->with('error', 'Cannot complete request. All test results must be entered first.');
-            }
-            
-            $labRequest->completed_at = $now;
-            $labRequest->completed_by = $userId;
         } elseif ($status === 'delivered') {
-            // Can only deliver completed requests
-            if ($labRequest->status !== 'completed') {
-                return redirect()->back()->with('error', 'Cannot deliver request. Must be completed first.');
+            // Can only deliver ready requests
+            if ($oldStatus !== 'ready') {
+                return redirect()->back()->with('error', 'Cannot deliver request. Must be ready first.');
             }
             
             $labRequest->delivered_at = $now;
             $labRequest->delivered_by = $userId;
         }
+
+        $labRequest->status = $status;
 
         $labRequest->save();
 

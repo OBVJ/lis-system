@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\LabRequest;
 use App\Models\Sample;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class SampleController extends Controller
@@ -31,7 +32,6 @@ class SampleController extends Controller
     {
         $request->validate([
             'request_id' => 'required|exists:lab_requests,id',
-            'sample_type' => 'required|exists:specimen_types,name',
         ]);
 
         // Generate Clinical Barcode (e.g. LAB-RANDOM)
@@ -39,7 +39,7 @@ class SampleController extends Controller
 
         Sample::create([
             'request_id' => $request->request_id,
-            'sample_type' => $request->sample_type,
+            'sample_type' => $request->sample_type ?? 'General',
             'collected_at' => now(),
             'status' => 'collected',
             'barcode' => $barcode,
@@ -48,8 +48,12 @@ class SampleController extends Controller
 
         // Update laboratory workflow status
         $labRequest = LabRequest::find($request->request_id);
-        if ($labRequest->status === 'pending') {
-            $labRequest->update(['status' => 'sample_collected']);
+        if (in_array($labRequest->status, ['pending', 'waiting'])) {
+            $labRequest->update([
+                'status' => 'sample_collected',
+                'collected_at' => now(),
+                'collected_by' => Auth::id()
+            ]);
         }
 
         return back()->with('success', 'Sample successfully collected with Barcode: ' . $barcode);

@@ -10,8 +10,8 @@ class QueueController extends Controller
 {
     public function index()
     {
-        // Waiting: patients with pending requests (no sample collected)
-        $waiting = $this->getPatientsInStatus('pending');
+        // Waiting: patients with waiting requests (no sample collected)
+        $waiting = $this->getPatientsInStatus('waiting');
 
         // Sample Collected: patients with collected requests (sample taken)
         $sampleCollected = $this->getPatientsInStatus('sample_collected');
@@ -19,14 +19,14 @@ class QueueController extends Controller
         // In Progress: patients with in_progress requests (results being entered)
         $inProgress = $this->getPatientsInStatus('in_progress');
 
-        // Ready: patients with completed requests (results done)
-        $ready = $this->getPatientsInStatus('completed');
+        // Ready: patients with ready requests (results done)
+        $ready = $this->getPatientsInStatus('ready');
 
-        // Printed/Delivered: patients with delivered requests
-        $printedDelivered = $this->getPatientsInStatus('delivered');
+        // Delivered: patients with delivered requests
+        $delivered = $this->getPatientsInStatus('delivered');
 
         return view('queue.index', compact(
-            'waiting', 'sampleCollected', 'inProgress', 'ready', 'printedDelivered'
+            'waiting', 'sampleCollected', 'inProgress', 'ready', 'delivered'
         ));
     }
 
@@ -35,8 +35,12 @@ class QueueController extends Controller
         $statuses = [$status];
 
         // Handle legacy status mappings
-        if ($status === 'sample_collected') {
+        if ($status === 'waiting') {
+            $statuses = ['waiting', 'pending'];
+        } elseif ($status === 'sample_collected') {
             $statuses = ['collected', 'sample_collected'];
+        } elseif ($status === 'ready') {
+            $statuses = ['ready', 'completed'];
         }
 
         return Patient::whereHas('requests', function ($q) use ($statuses) {

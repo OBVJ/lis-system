@@ -7,130 +7,148 @@
     @media print {
         body { background: white !important; }
         .no-print { display: none !important; }
-        .receipt-container { box-shadow: none !important; border: 1px solid #000 !important; }
+        .receipt-container { box-shadow: none !important; border: none !important; max-width: 360px !important; width: 100% !important; margin: 0 auto !important; padding: 12px !important; }
+        .receipt-container * { box-shadow: none !important; }
+        html, body { margin: 0 !important; padding: 0 !important; }
     }
 
     .receipt-container {
-        max-width: 800px;
+        max-width: 360px;
+        width: 100%;
         margin: 0 auto;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        padding: 30px;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 12px;
+        padding: 18px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #212529;
+    }
+
+    body[dir='rtl'] .receipt-container {
+        direction: rtl;
+        text-align: right;
     }
 
     .receipt-header {
         text-align: center;
-        border-bottom: 2px solid #0d6efd;
-        padding-bottom: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 18px;
     }
 
     .receipt-title {
-        font-size: 28px;
-        font-weight: bold;
-        color: #0d6efd;
-        margin-bottom: 10px;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 4px;
     }
 
     .receipt-subtitle {
-        font-size: 16px;
-        color: #6c757d;
+        font-size: 13px;
+        color: #555;
+        margin-bottom: 10px;
     }
 
-    .receipt-info {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 20px;
-        margin-bottom: 30px;
+    .receipt-meta {
+        font-size: 12px;
+        color: #555;
+        margin-bottom: 4px;
     }
 
-    .info-section h5 {
+    .info-section {
+        margin-bottom: 14px;
+    }
+
+    .info-heading {
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 8px;
         color: #0d6efd;
-        border-bottom: 1px solid #e9ecef;
-        padding-bottom: 5px;
-        margin-bottom: 15px;
+        border-bottom: 1px dashed #dee2e6;
+        padding-bottom: 6px;
     }
 
     .info-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 8px;
+        gap: 8px;
+        font-size: 12px;
+        padding: 4px 0;
+    }
+
+    body[dir='rtl'] .info-row {
+        flex-direction: row-reverse;
     }
 
     .info-label {
-        font-weight: 500;
-        color: #495057;
+        color: #555;
     }
 
     .info-value {
-        color: #212529;
+        color: #111;
+        font-weight: 600;
     }
 
     .tests-table {
-        margin-bottom: 30px;
+        margin-bottom: 16px;
     }
 
     .tests-table table {
         width: 100%;
         border-collapse: collapse;
+        font-size: 12px;
     }
 
     .tests-table th,
     .tests-table td {
-        padding: 12px;
-        text-align: left;
-        border-bottom: 1px solid #dee2e6;
+        padding: 6px 4px;
+        border-bottom: 1px dashed #dee2e6;
     }
 
     .tests-table th {
-        background-color: #f8f9fa;
-        font-weight: 600;
-        color: #495057;
+        text-align: left;
+        font-weight: 700;
+        color: #333;
+    }
+
+    body[dir='rtl'] .tests-table th,
+    body[dir='rtl'] .tests-table td {
+        text-align: right;
     }
 
     .payment-summary {
-        background-color: #f8f9fa;
-        padding: 20px;
-        border-radius: 8px;
-        margin-top: 20px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 12px;
+        font-size: 12px;
     }
 
     .summary-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 10px;
-        font-size: 16px;
+        gap: 8px;
+        padding: 4px 0;
     }
 
     .summary-total {
-        font-size: 18px;
-        font-weight: bold;
-        color: #0d6efd;
-        border-top: 2px solid #0d6efd;
-        padding-top: 10px;
-        margin-top: 10px;
+        margin-top: 8px;
+        font-weight: 700;
+        border-top: 1px dashed #dee2e6;
+        padding-top: 8px;
     }
 
     .receipt-footer {
         text-align: center;
-        margin-top: 40px;
-        padding-top: 20px;
-        border-top: 1px solid #dee2e6;
-        color: #6c757d;
-        font-size: 14px;
+        color: #777;
+        font-size: 12px;
+        margin-top: 16px;
     }
 
     .print-btn {
+        width: 100%;
         background: #0d6efd;
-        color: white;
+        color: #fff;
         border: none;
-        padding: 12px 30px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 16px;
-        margin-bottom: 20px;
+        padding: 10px 0;
+        border-radius: 8px;
+        font-size: 14px;
     }
 
     .print-btn:hover {
@@ -149,6 +167,11 @@
     </div>
 
     <div class="receipt-container">
+        @php
+            $currency = App\Models\Setting::get('currency_symbol', 'SDG');
+            $payment = $labRequest->payment;
+            $subtotal = optional($payment)->amount + optional($payment)->discount_value;
+        @endphp
         <!-- Receipt Header -->
         <div class="receipt-header">
             <h1 class="receipt-title">{{ __('Laboratory Information System') }}</h1>
@@ -208,21 +231,19 @@
 
         <!-- Tests Table -->
         <div class="tests-table">
-            <h5>{{ __('Requested Tests') }}</h5>
+            <div class="info-heading">{{ __('Requested Tests') }}</div>
             <table>
                 <thead>
                     <tr>
-                        <th>{{ __('Test Name') }}</th>
-                        <th>{{ __('Category') }}</th>
+                        <th>{{ __('Test') }}</th>
                         <th>{{ __('Price') }}</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($labRequest->items as $item)
                     <tr>
-                        <td>{{ $item->test->name }}</td>
-                        <td>{{ $item->test->category->name ?? __('N/A') }}</td>
-                        <td>{{ number_format($item->test->price, 2) }} {{ __('EGP') }}</td>
+                        <td>{{ optional($item->test)->name ?? __('N/A') }}</td>
+                        <td>{{ number_format(optional($item->test)->price ?? 0, 2) }} {{ $currency }}</td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -233,25 +254,25 @@
         <div class="payment-summary">
             <div class="summary-row">
                 <span>{{ __('Subtotal:') }}</span>
-                <span>{{ number_format($labRequest->payment->amount + $labRequest->payment->discount_value, 2) }} {{ __('EGP') }}</span>
+                <span>{{ number_format($subtotal, 2) }} {{ $currency }}</span>
             </div>
-            @if($labRequest->payment->discount_value > 0)
+            @if(optional($payment)->discount_value > 0)
             <div class="summary-row">
                 <span>{{ __('Discount:') }}</span>
-                <span>-{{ number_format($labRequest->payment->discount_value, 2) }} {{ __('EGP') }}</span>
+                <span>-{{ number_format(optional($payment)->discount_value, 2) }} {{ $currency }}</span>
             </div>
             @endif
             <div class="summary-row summary-total">
                 <span>{{ __('Total Amount:') }}</span>
-                <span>{{ number_format($labRequest->payment->amount, 2) }} {{ __('EGP') }}</span>
+                <span>{{ number_format(optional($payment)->amount ?? 0, 2) }} {{ $currency }}</span>
             </div>
             <div class="summary-row">
                 <span>{{ __('Paid Amount:') }}</span>
-                <span>{{ number_format($labRequest->payment->paid_amount, 2) }} {{ __('EGP') }}</span>
+                <span>{{ number_format(optional($payment)->paid_amount ?? 0, 2) }} {{ $currency }}</span>
             </div>
             <div class="summary-row">
                 <span>{{ __('Payment Status:') }}</span>
-                <span>{{ __($labRequest->payment->status) }}</span>
+                <span>{{ __($payment->status ?? 'unpaid') }}</span>
             </div>
         </div>
 

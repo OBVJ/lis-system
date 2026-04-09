@@ -49,16 +49,16 @@
     [dir="rtl"] .section-title i { margin-right: 0; margin-left: 8px; }
 </style>
 
-<div class="dashboard-header mt-2">
+<div class="dashboard-header mt-2 d-flex flex-column flex-md-row gap-3">
     <h1 class="dashboard-title mb-0">{{ __('app.lab_dashboard') }}</h1>
-    <div class="header-btns d-flex gap-2">
-        <a href="{{ route('patients.create') }}" class="btn btn-lis-primary d-flex align-items-center">
+    <div class="header-btns d-flex flex-wrap gap-2">
+        <a href="{{ route('patients.create') }}" class="btn btn-lis-primary d-flex align-items-center flex-grow-1 flex-md-grow-0 justify-content-center">
             <i class="fas fa-user-plus me-2"></i> {{ __('app.new_patient') ?? 'New Patient' }}
         </a>
-        <a href="{{ route('queue') }}" class="btn btn-lis-secondary d-flex align-items-center">
+        <a href="{{ route('queue') }}" class="btn btn-lis-secondary d-flex align-items-center flex-grow-1 flex-md-grow-0 justify-content-center">
             <i class="fas fa-vial me-2"></i> {{ __('app.collect_sample') ?? 'Collect Sample' }}
         </a>
-        <a href="{{ route('results.index') }}" class="btn btn-outline-primary d-flex align-items-center">
+        <a href="{{ route('results.index') }}" class="btn btn-outline-primary d-flex align-items-center flex-grow-1 flex-md-grow-0 justify-content-center">
             <i class="fas fa-flask me-2"></i> {{ __('app.enter_results') ?? 'Enter Results' }}
         </a>
     </div>
